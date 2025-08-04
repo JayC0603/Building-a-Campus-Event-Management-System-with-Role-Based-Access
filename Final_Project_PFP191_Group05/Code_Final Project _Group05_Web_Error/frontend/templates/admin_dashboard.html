@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Campus Events</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dashboard-page">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Campus Events
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>
+                            Trang chủ
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-shield me-1"></i>
+                            {{ user.full_name or user.username }} (Admin)
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="backupSystem()">
+                                <i class="fas fa-download me-2"></i>Sao lưu dữ liệu</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>QUẢN LÝ HỆ THỐNG</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#overview" data-tab="overview">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                Tổng quan
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#events" data-tab="events">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Quản lý sự kiện
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#users" data-tab="users">
+                                <i class="fas fa-users me-2"></i>
+                                Quản lý người dùng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#registrations" data-tab="registrations">
+                                <i class="fas fa-clipboard-list me-2"></i>
+                                Đăng ký
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#reports" data-tab="reports">
+                                <i class="fas fa-file-alt me-2"></i>
+                                Báo cáo
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <!-- Overview Tab -->
+                <div id="overview-tab" class="tab-content active">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-chart-pie text-primary me-2"></i>
+                            Dashboard Tổng quan
+                        </h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportAllReports()">
+                                    <i class="fas fa-download"></i> Xuất báo cáo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Tổng sự kiện
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-events-count">
+                                                {{ stats.total_events or 0 }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Tổng người tham gia
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-attendees-count">
+                                                {{ stats.total_attendees or 0 }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Tổng người dùng
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-users-count">
+                                                {{ stats.total_users or 0 }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-user fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Tổng đăng ký
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-registrations-count">
+                                                {{ stats.total_registrations or 0 }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="row">
+                        <div class="col-xl-6 col-lg-7">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Thống kê theo danh mục</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-pie pt-4 pb-2">
+                                        <canvas id="categoryChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-6 col-lg-5">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Tình trạng đăng ký</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-pie pt-4 pb-2">
+                                        <canvas id="registrationChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Events Table -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Sự kiện gần đây</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="recent-events-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên sự kiện</th>
+                                            <th>Tổ chức</th>
+                                            <th>Ngày</th>
+                                            <th>Danh mục</th>
+                                            <th>Tham gia</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-events-tbody">
+                                        <!-- Content will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events Tab -->
+                <div id="events-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-calendar-alt text-primary me-2"></i>
+                            Quản lý sự kiện
+                        </h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#eventModal">
+                                <i class="fas fa-plus me-2"></i>Tạo sự kiện
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Events Management Content -->
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" placeholder="Tìm kiếm sự kiện..." id="event-search">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="event-category-filter">
+                                        <option value="">Tất cả danh mục</option>
+                                        <option value="academic">Học thuật</option>
+                                        <option value="cultural">Văn hóa</option>
+                                        <option value="sports">Thể thao</option>
+                                        <option value="workshop">Workshop</option>
+                                        <option value="seminar">Hội thảo</option>
+                                        <option value="competition">Thi đấu</option>
+                                        <option value="other">Khác</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="event-status-filter">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="active">Hoạt động</option>
+                                        <option value="draft">Nháp</option>
+                                        <option value="cancelled">Đã hủy</option>
+                                        <option value="completed">Hoàn thành</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên sự kiện</th>
+                                            <th>Tổ chức</th>
+                                            <th>Ngày</th>
+                                            <th>Danh mục</th>
+                                            <th>Sức chứa</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="events-table-body">
+                                        <!-- Content will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div id="users-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Quản lý người dùng
+                        </h1>
+                    </div>
+                    
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên đăng nhập</th>
+                                            <th>Họ tên</th>
+                                            <th>Email</th>
+                                            <th>Vai trò</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ngày tạo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="users-table-body">
+                                        <!-- Content will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registrations Tab -->
+                <div id="registrations-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-clipboard-list text-primary me-2"></i>
+                            Quản lý đăng ký
+                        </h1>
+                    </div>
+                    
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Sự kiện</th>
+                                            <th>Người dùng</th>
+                                            <th>Ngày đăng ký</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ghi chú</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="registrations-table-body">
+                                        <!-- Content will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Tab -->
+                <div id="reports-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-file-alt text-primary me-2"></i>
+                            Báo cáo hệ thống
+                        </h1>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-primary">Báo cáo sự kiện</h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calendar-alt fa-3x text-primary mb-3"></i>
+                                    <p>Xuất báo cáo chi tiết về tất cả sự kiện trong hệ thống</p>
+                                    <button class="btn btn-primary" onclick="exportEventsReport()">
+                                        <i class="fas fa-download me-2"></i>Xuất báo cáo sự kiện
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-primary">Báo cáo đăng ký</h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <i class="fas fa-clipboard-list fa-3x text-success mb-3"></i>
+                                    <p>Xuất báo cáo chi tiết về tất cả đăng ký tham gia sự kiện</p>
+                                    <button class="btn btn-success" onclick="exportRegistrationsReport()">
+                                        <i class="fas fa-download me-2"></i>Xuất báo cáo đăng ký
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal fade" id="eventModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalTitle">Tạo sự kiện mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="eventForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="eventId" name="eventId">
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="eventTitle" class="form-label">Tên sự kiện *</label>
+                                <input type="text" class="form-control" id="eventTitle" name="title" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="eventCategory" class="form-label">Danh mục *</label>
+                                <select class="form-select" id="eventCategory" name="category" required>
+                                    <option value="academic">Học thuật</option>
+                                    <option value="cultural">Văn hóa</option>
+                                    <option value="sports">Thể thao</option>
+                                    <option value="workshop">Workshop</option>
+                                    <option value="seminar">Hội thảo</option>
+                                    <option value="competition">Thi đấu</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="eventDescription" class="form-label">Mô tả sự kiện *</label>
+                            <textarea class="form-control" id="eventDescription" name="description" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="eventDate" class="form-label">Ngày và giờ *</label>
+                                <input type="datetime-local" class="form-control" id="eventDate" name="event_date" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="eventCapacity" class="form-label">Sức chứa *</label>
+                                <input type="number" class="form-control" id="eventCapacity" name="max_capacity" min="1" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="eventLocation" class="form-label">Địa điểm *</label>
+                            <input type="text" class="form-control" id="eventLocation" name="location" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="eventSubmitBtn">
+                            <i class="fas fa-save me-2"></i>Lưu sự kiện
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="successMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="errorMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle sidebar navigation
+            const navLinks = document.querySelectorAll('[data-tab]');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetTab = this.getAttribute('data-tab');
+
+                    // Remove active class from all nav links and tab contents
+                    navLinks.forEach(nl => nl.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+
+                    // Add active class to clicked nav link and corresponding tab content
+                    this.classList.add('active');
+                    document.getElementById(targetTab + '-tab').classList.add('active');
+                });
+            });
+
+            // Load initial data
+            loadEventsTable();
+            loadUsersTable();
+            loadRegistrationsTable();
+        });
+
+        // Load events table
+        function loadEventsTable() {
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(events => {
+                    const tbody = document.getElementById('events-table-body');
+                    tbody.innerHTML = '';
+                    
+                    events.forEach(event => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${event.title}</td>
+                            <td>${event.organizer_name}</td>
+                            <td>${new Date(event.event_date).toLocaleString('vi-VN')}</td>
+                            <td><span class="badge bg-primary">${event.category}</span></td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar" style="width: ${Math.round((event.current_attendees / event.max_capacity) * 100)}%">
+                                        ${event.current_attendees}/${event.max_capacity}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-${event.status === 'active' ? 'success' : event.status === 'draft' ? 'secondary' : 'danger'}">
+                                    ${event.status === 'active' ? 'Hoạt động' : event.status === 'draft' ? 'Nháp' : 'Đã hủy'}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editEvent('${event.event_id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteEvent('${event.event_id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    // Load recent events table
+                    const recentTbody = document.getElementById('recent-events-tbody');
+                    recentTbody.innerHTML = '';
+                    
+                    events.slice(0, 5).forEach(event => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${event.title}</td>
+                            <td>${event.organizer_name}</td>
+                            <td>${new Date(event.event_date).toLocaleDateString('vi-VN')}</td>
+                            <td><span class="badge bg-primary">${event.category}</span></td>
+                            <td>${event.current_attendees}/${event.max_capacity}</td>
+                            <td>
+                                <span class="badge bg-${event.status === 'active' ? 'success' : 'secondary'}">
+                                    ${event.status === 'active' ? 'Hoạt động' : event.status}
+                                </span>
+                            </td>
+                        `;
+                        recentTbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading events:', error);
+                });
+        }
+
+        // Load users table
+        function loadUsersTable() {
+            // Simulate loading users data
+            const users = [
+                { username: 'admin', full_name: 'System Administrator', email: 'admin@campus.edu', role: 'admin', is_active: true, created_at: '2024-01-01' },
+                { username: 'organizer1', full_name: 'Event Organizer 1', email: 'organizer1@campus.edu', role: 'organizer', is_active: true, created_at: '2024-01-15' },
+                { username: 'student1', full_name: 'Student User 1', email: 'student1@campus.edu', role: 'student', is_active: true, created_at: '2024-02-01' }
+            ];
+            
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.full_name}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge bg-${user.role === 'admin' ? 'danger' : user.role === 'organizer' ? 'primary' : 'success'}">
+                            ${user.role === 'admin' ? 'Admin' : user.role === 'organizer' ? 'Organizer' : 'Student'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-${user.is_active ? 'success' : 'danger'}">
+                            ${user.is_active ? 'Hoạt động' : 'Khóa'}
+                        </span>
+                    </td>
+                    <td>${new Date(user.created_at).toLocaleDateString('vi-VN')}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Load registrations table
+        function loadRegistrationsTable() {
+            fetch('/api/my-registrations')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('registrations-table-body');
+                    tbody.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Chưa có đăng ký nào</td></tr>';
+                        return;
+                    }
+                    
+                    data.forEach(regData => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${regData.event.title}</td>
+                            <td>${regData.event.organizer_name || 'Unknown'}</td>
+                            <td>${new Date(regData.registration.registered_at).toLocaleString('vi-VN')}</td>
+                            <td>
+                                <span class="badge bg-${regData.registration.status === 'confirmed' ? 'success' : 'secondary'}">
+                                    ${regData.registration.status === 'confirmed' ? 'Đã xác nhận' : regData.registration.status}
+                                </span>
+                            </td>
+                            <td>${regData.registration.notes || '-'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading registrations:', error);
+                    const tbody = document.getElementById('registrations-table-body');
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Lỗi tải dữ liệu</td></tr>';
+                });
+        }
+
+        // Event management functions
+        function editEvent(eventId) {
+            console.log('Editing event:', eventId);
+            // Implementation for editing event
+        }
+
+        function deleteEvent(eventId) {
+            if (confirm('Bạn có chắc chắn muốn xóa sự kiện này?')) {
+                fetch(`/api/events/${eventId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showSuccess(result.message);
+                        loadEventsTable();
+                    } else {
+                        showError(result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting event:', error);
+                    showError('Lỗi xóa sự kiện');
+                });
+            }
+        }
+
+        function backupSystem() {
+            fetch('/api/system/backup')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showSuccess('Sao lưu dữ liệu thành công');
+                    } else {
+                        showError(result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error backing up system:', error);
+                    showError('Lỗi sao lưu hệ thống');
+                });
+        }
+
+        function exportEventsReport() {
+            fetch('/api/reports/events/export')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showSuccess('Xuất báo cáo sự kiện thành công');
+                    } else {
+                        showError(result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error exporting events report:', error);
+                    showError('Lỗi xuất báo cáo sự kiện');
+                });
+        }
+
+        function exportRegistrationsReport() {
+            fetch('/api/reports/registrations/export')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showSuccess('Xuất báo cáo đăng ký thành công');
+                    } else {
+                        showError(result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error exporting registrations report:', error);
+                    showError('Lỗi xuất báo cáo đăng ký');
+                });
+        }
+
+        function exportAllReports() {
+            exportEventsReport();
+            setTimeout(() => exportRegistrationsReport(), 1000);
+        }
+
+        function refreshDashboard() {
+            location.reload();
+        }
+
+        function showSuccess(message) {
+            document.getElementById('successMessage').textContent = message;
+            const toast = new bootstrap.Toast(document.getElementById('successToast'));
+            toast.show();
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            const toast = new bootstrap.Toast(document.getElementById('errorToast'));
+            toast.show();
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">  

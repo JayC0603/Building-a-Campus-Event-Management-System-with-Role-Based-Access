@@ -1,0 +1,38 @@
+{
+  "users": [
+    {
+      "user_id": "550e8400-e29b-41d4-a716-446655440000",
+      "username": "admin",
+      "password": "admin123",
+      "name": "System Administrator",
+      "email": "admin@campus.edu",
+      "created_at": "2025-07-23T10:00:00.000000",
+      "registered_events": [],
+      "user_type": "admin"
+    },
+    {
+      "user_id": "8ceb68cd-9641-425b-8724-7eff37554b6b",
+      "username": "Hello",
+      "password": "123456789",
+      "name": "Hello World",
+      "email": "hello@gmail.com",
+      "created_at": "2025-07-23T07:27:31.042955",
+      "registered_events": [],
+      "user_type": "visitor",
+      "organization": "Alpha"
+    },
+    {
+      "user_id": "2f851834-4b97-479a-8446-34aa536a85b9",
+      "username": "Lan",
+      "password": "Lan123",
+      "name": "Nguyen Ngoc Lan",
+      "email": "nnlan@gmail.com",
+      "created_at": "2025-07-23T07:57:06.551294",
+      "registered_events": [],
+      "user_type": "student",
+      "student_id": "123456"
+    }
+  ],
+  "last_updated": "2025-07-23T07:57:55.015865",
+  "version": "1.0"
+}

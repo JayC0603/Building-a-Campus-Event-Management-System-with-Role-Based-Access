@@ -1,0 +1,596 @@
+<div class="h5 mb-0 font-weight-bold text-gray-800" id="attended-count">
+                                                {% set attended_count = 0 %}
+                                                {% if stats.registered_events %}
+                                                    {% for reg_data in stats.registered_events %}
+                                                        {% if reg_data.registration.status.value == 'attended' %}
+                                                            {% set attended_count = attended_count + 1 %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                                {{ attended_count }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Điểm tích lũy
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ attended_count * 10 }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">Khám phá sự kiện</h5>
+                                    <p class="card-text">Tìm kiếm các sự kiện thú vị và phù hợp với bạn</p>
+                                    <button class="btn btn-primary" onclick="switchTab('discover')">
+                                        <i class="fas fa-compass me-2"></i>Khám phá ngay
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-calendar-alt fa-3x text-success mb-3"></i>
+                                    <h5 class="card-title">Sự kiện của tôi</h5>
+                                    <p class="card-text">Xem và quản lý các sự kiện bạn đã đăng ký</p>
+                                    <button class="btn btn-success" onclick="switchTab('registered')">
+                                        <i class="fas fa-calendar-check me-2"></i>Xem ngay
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-heart fa-3x text-danger mb-3"></i>
+                                    <h5 class="card-title">Sở thích</h5>
+                                    <p class="card-text">Cập nhật sở thích để nhận gợi ý tốt hơn</p>
+                                    <button class="btn btn-danger" onclick="switchTab('preferences')">
+                                        <i class="fas fa-cog me-2"></i>Cài đặt
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card shadow">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-primary">Hoạt động gần đây</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="timeline" id="recent-activity">
+                                        {% if stats.registered_events %}
+                                            {% for reg_data in stats.registered_events[:5] %}
+                                            <div class="timeline-item">
+                                                <div class="timeline-marker bg-success"></div>
+                                                <div class="timeline-content">
+                                                    <h6 class="mb-1">Đăng ký tham gia</h6>
+                                                    <p class="mb-1">{{ reg_data.event.title }}</p>
+                                                    <small class="text-muted">{{ reg_data.registration.registered_at|datetime }}</small>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="text-center text-muted py-4">
+                                                <i class="fas fa-history fa-3x mb-3"></i>
+                                                <p>Chưa có hoạt động nào</p>
+                                                <p>Hãy đăng ký tham gia sự kiện đầu tiên!</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card shadow">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-primary">Sự kiện được gợi ý</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recommended-events">
+                                        <!-- Will be loaded via AJAX -->
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                            <p class="mt-2">Đang tải...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discover Tab -->
+                <div id="discover-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-compass text-primary me-2"></i>
+                            Khám phá sự kiện
+                        </h1>
+                    </div>
+
+                    <!-- Search and Filter -->
+                    <div class="card shadow mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" placeholder="Tìm kiếm sự kiện..." id="discover-search">
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <select class="form-select" id="discover-category">
+                                        <option value="">Tất cả danh mục</option>
+                                        <option value="academic">Học thuật</option>
+                                        <option value="cultural">Văn hóa</option>
+                                        <option value="sports">Thể thao</option>
+                                        <option value="workshop">Workshop</option>
+                                        <option value="seminar">Hội thảo</option>
+                                        <option value="competition">Thi đấu</option>
+                                        <option value="other">Khác</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <select class="form-select" id="discover-sort">
+                                        <option value="date">Theo ngày</option>
+                                        <option value="popularity">Phổ biến</option>
+                                        <option value="capacity">Còn chỗ</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <button class="btn btn-primary w-100" onclick="searchEvents()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Events Grid -->
+                    <div class="row" id="discover-events-grid">
+                        <!-- Content will be loaded via AJAX -->
+                    </div>
+
+                    <!-- Load More Button -->
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-primary" id="load-more-btn" onclick="loadMoreEvents()">
+                            <i class="fas fa-plus me-2"></i>Xem thêm sự kiện
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Registered Tab -->
+                <div id="registered-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-calendar-check text-success me-2"></i>
+                            Sự kiện đã đăng ký
+                        </h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <select class="form-select me-2" id="registered-filter">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="confirmed">Đã xác nhận</option>
+                                <option value="attended">Đã tham gia</option>
+                                <option value="cancelled">Đã hủy</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-secondary" onclick="refreshRegistered()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Registered Events -->
+                    <div class="row" id="registered-events-grid">
+                        {% if stats.registered_events %}
+                            {% for reg_data in stats.registered_events %}
+                            <div class="col-lg-6 col-md-12 mb-4">
+                                <div class="card event-card h-100">
+                                    <div class="event-category-badge">{{ reg_data.event.category.value|title }}</div>
+                                    <div class="registration-status-badge bg-{{ 'success' if reg_data.registration.status.value == 'confirmed' else 'warning' if reg_data.registration.status.value == 'attended' else 'danger' }}">
+                                        {{ 'Đã xác nhận' if reg_data.registration.status.value == 'confirmed' else 'Đã tham gia' if reg_data.registration.status.value == 'attended' else 'Đã hủy' }}
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ reg_data.event.title }}</h5>
+                                        <p class="card-text text-muted small">{{ reg_data.event.description[:100] }}...</p>
+                                        
+                                        <div class="event-meta mb-3">
+                                            <div class="mb-2">
+                                                <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                                <small>{{ reg_data.event.event_date|datetime }}</small>
+                                            </div>
+                                            <div class="mb-2">
+                                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                                <small>{{ reg_data.event.location }}</small>
+                                            </div>
+                                            <div class="mb-2">
+                                                <i class="fas fa-clock text-primary me-2"></i>
+                                                <small>Đăng ký: {{ reg_data.registration.registered_at|datetime }}</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary btn-sm flex-fill" onclick="showEventDetails('{{ reg_data.event.event_id }}')">
+                                                <i class="fas fa-info-circle me-1"></i>Chi tiết
+                                            </button>
+                                            {% if reg_data.registration.status.value == 'confirmed' %}
+                                                <button class="btn btn-danger btn-sm" onclick="cancelRegistration('{{ reg_data.event.event_id }}')">
+                                                    <i class="fas fa-times me-1"></i>Hủy
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                    <h4 class="text-muted">Chưa đăng ký sự kiện nào</h4>
+                                    <p class="text-muted">Hãy khám phá và đăng ký các sự kiện thú vị!</p>
+                                    <button class="btn btn-primary" onclick="switchTab('discover')">
+                                        <i class="fas fa-compass me-2"></i>Khám phá sự kiện
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- History Tab -->
+                <div id="history-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-history text-info me-2"></i>
+                            Lịch sử tham gia
+                        </h1>
+                    </div>
+
+                    <!-- Statistics Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calendar fa-2x mb-2"></i>
+                                    <h4>{{ stats.my_registrations or 0 }}</h4>
+                                    <p>Tổng đăng ký</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                    <h4>{{ attended_count }}</h4>
+                                    <p>Đã tham gia</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-star fa-2x mb-2"></i>
+                                    <h4>{{ attended_count * 10 }}</h4>
+                                    <p>Điểm tích lũy</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-trophy fa-2x mb-2"></i>
+                                    <h4>{{ 'Gold' if attended_count >= 10 else 'Silver' if attended_count >= 5 else 'Bronze' }}</h4>
+                                    <p>Hạng thành viên</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- History Timeline -->
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">Lịch sử chi tiết</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Sự kiện</th>
+                                            <th>Danh mục</th>
+                                            <th>Ngày sự kiện</th>
+                                            <th>Ngày đăng ký</th>
+                                            <th>Trạng thái</th>
+                                            <th>Điểm</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if stats.registered_events %}
+                                            {% for reg_data in stats.registered_events %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ reg_data.event.title }}</strong><br>
+                                                    <small class="text-muted">{{ reg_data.event.location }}</small>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary">{{ reg_data.event.category.value|title }}</span>
+                                                </td>
+                                                <td>{{ reg_data.event.event_date|datetime }}</td>
+                                                <td>{{ reg_data.registration.registered_at|datetime }}</td>
+                                                <td>
+                                                    {% if reg_data.registration.status.value == 'confirmed' %}
+                                                        <span class="badge bg-success">Đã xác nhận</span>
+                                                    {% elif reg_data.registration.status.value == 'attended' %}
+                                                        <span class="badge bg-primary">Đã tham gia</span>
+                                                    {% elif reg_data.registration.status.value == 'cancelled' %}
+                                                        <span class="badge bg-danger">Đã hủy</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">{{ reg_data.registration.status.value|title }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if reg_data.registration.status.value == 'attended' %}
+                                                        <span class="text-success">+10</span>
+                                                    {% else %}
+                                                        <span class="text-muted">0</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">Chưa có lịch sử tham gia</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Tab -->
+                <div id="preferences-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-cog text-warning me-2"></i>
+                            Sở thích và cài đặt
+                        </h1>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card shadow mb-4">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-primary">Sở thích sự kiện</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="preferencesForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Danh mục yêu thích:</label>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pref-academic" name="preferences" value="academic">
+                                                        <label class="form-check-label" for="pref-academic">Học thuật</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pref-cultural" name="preferences" value="cultural">
+                                                        <label class="form-check-label" for="pref-cultural">Văn hóa</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pref-sports" name="preferences" value="sports">
+                                                        <label class="form-check-label" for="pref-sports">Thể thao</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pref-workshop" name="preferences" value="workshop">
+                                                        <label class="form-check-label" for="pref-workshop">Workshop</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pref-seminar" name="preferences" value="seminar">
+                                                        <label class="form-check-label" for="pref-seminar">Hội thảo</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pref-competition" name="preferences" value="competition">
+                                                        <label class="form-check-label" for="pref-competition">Thi đấu</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Thông báo:</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="notify-new-events" checked>
+                                                <label class="form-check-label" for="notify-new-events">
+                                                    Thông báo khi có sự kiện mới phù hợp
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="notify-reminders" checked>
+                                                <label class="form-check-label" for="notify-reminders">
+                                                    Nhắc nhở trước sự kiện 1 ngày
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Lưu cài đặt
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card shadow">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-primary">Thông tin cá nhân</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <i class="fas fa-user-circle fa-4x text-muted"></i>
+                                    </div>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>Tên:</strong></td>
+                                            <td>{{ user.full_name or 'Chưa cập nhật' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Email:</strong></td>
+                                            <td>{{ user.email }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Vai trò:</strong></td>
+                                            <td>{{ 'Sinh viên' if user.role.value == 'student' else 'Khách' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Tham gia:</strong></td>
+                                            <td>{{ user.created_at|datetime }}</td>
+                                        </tr>
+                                    </table>
+                                    <button class="btn btn-outline-primary w-100" onclick="editProfile()">
+                                        <i class="fas fa-edit me-2"></i>Chỉnh sửa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div class="modal fade" id="eventDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chi tiết sự kiện</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="eventDetailsContent">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chỉnh sửa hồ sơ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="profileForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" id="fullName" name="full_name" value="{{ user.full_name }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" readonly>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="successMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="errorMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle sidebar navigation
+            const navLinks = document.querySelectorAll('[data-tab]');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetTab = this.getAttribute('data-tab');
+                    switchTab(targetTab);
+                });
+            });
+
+            // Load recommended events
+            loadRecommendedEvents();
+            
+            // Load discover events
+            loadDiscoverEvents();
+        });
+
+        function switchTab(targetTab) {
+            const navLinks = document.querySelectorAll('[data-tab]');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            // Remove active class from all nav links and tab contents
+            navLinks.forEach(nl => nl.classList.remove('active'));
+            tabContents.forEach(tc => tc.classList.remove('active'));
+
+            // Add active class to clicked nav link and corresponding tab content
+            document.querySelector(`[data-tab="${targetTab}"]`).classList.add('active');
+document.getElementById(targetTab + '-tab').classList.add('active');
+}

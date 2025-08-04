@@ -1,0 +1,38 @@
+[
+  {
+    "user_id": "admin_001",
+    "username": "admin",
+    "email": "admin@campus.edu",
+    "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "role": "admin",
+    "full_name": "System Administrator",
+    "is_active": true
+  },
+  {
+    "user_id": "org_001",
+    "username": "organizer1",
+    "email": "organizer1@campus.edu",
+    "password": "d086b84163a6de3f31d4686dbeca31ab484c6f832e2c70ab5f2171ccef0cfecf",
+    "role": "organizer",
+    "full_name": "Event Organizer 1",
+    "is_active": true
+  },
+  {
+    "user_id": "std_001",
+    "username": "student1",
+    "email": "student1@campus.edu",
+    "password": "703b0a3d6ad75b649a28adde7d83c6251da457549263bc7ff45ec709b0a8448b",
+    "role": "student",
+    "full_name": "Student User 1",
+    "is_active": true
+  },
+  {
+    "user_id": "vis_001",
+    "username": "visitor1",
+    "email": "visitor1@example.com",
+    "password": "5c1e1b5c8936669bfe844210fb7ae7d3411dd9f41614d09ce9732dfc17c266bc",
+    "role": "visitor",
+    "full_name": "Visitor User 1",
+    "is_active": true
+  }
+]

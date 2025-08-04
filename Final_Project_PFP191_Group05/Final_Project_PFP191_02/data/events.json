@@ -1,0 +1,20 @@
+{
+  "events": [
+    {
+      "event_id": "066313c7-276a-4352-b746-2b029187e8a1",
+      "name": "Hovilo Games",
+      "description": "Lien Quan Mobile",
+      "date": "2025-07-23",
+      "time": "9:00",
+      "location": "Tang 4 - Alpha",
+      "capacity": 50,
+      "organizer_id": "550e8400-e29b-41d4-a716-446655440000",
+      "attendees": [],
+      "created_at": "2025-07-23T07:31:39.001762",
+      "updated_at": "2025-07-23T07:31:39.001762",
+      "status": "active"
+    }
+  ],
+  "last_updated": "2025-07-23T07:57:55.015865",
+  "version": "1.0"
+}

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Event Management System</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Campus Events
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#events">Sự kiện</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">Giới thiệu</a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if session.user_id %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>
+                                {{ session.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">
+                                <i class="fas fa-sign-in-alt me-1"></i>
+                                Đăng nhập
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section bg-gradient text-white py-5">
+        <div class="container">
+            <div class="row align-items-center min-vh-50">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">
+                        Quản lý Sự kiện Campus
+                    </h1>
+                    <p class="lead mb-4">
+                        Hệ thống quản lý sự kiện hiện đại cho trường đại học. Tìm kiếm, đăng ký và theo dõi các sự kiện một cách dễ dàng.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#events" class="btn btn-light btn-lg">
+                            <i class="fas fa-calendar me-2"></i>
+                            Xem sự kiện
+                        </a>
+                        {% if not session.user_id %}
+                            <a href="/login" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Đăng nhập
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="hero-stats">
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="stat-card text-center p-3">
+                                    <div class="stat-number" id="total-events">{{ upcoming_events|length + popular_events|length }}</div>
+                                    <div class="stat-label">Sự kiện</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-card text-center p-3">
+                                    <div class="stat-number" id="total-attendees">
+                                        {% set total_attendees = 0 %}
+                                        {% for event in popular_events %}
+                                            {% set total_attendees = total_attendees + event.current_attendees %}
+                                        {% endfor %}
+                                        {{ total_attendees }}
+                                    </div>
+                                    <div class="stat-label">Người tham gia</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-card text-center p-3">
+                                    <div class="stat-number">24/7</div>
+                                    <div class="stat-label">Hoạt động</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section class="py-4 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="search-box">
+                        <div class="input-group input-group-lg">
+                            <input type="text" class="form-control" placeholder="Tìm kiếm sự kiện..." id="search-input">
+                            <select class="form-select" id="category-filter">
+                                <option value="">Tất cả danh mục</option>
+                                <option value="academic">Học thuật</option>
+                                <option value="cultural">Văn hóa</option>
+                                <option value="sports">Thể thao</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="seminar">Hội thảo</option>
+                                <option value="competition">Thi đấu</option>
+                                <option value="other">Khác</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="searchEvents()">
+                                <i class="fas fa-search"></i>
+                                Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events Section -->
+    <section id="events" class="py-5">
+        <div class="container">
+            <!-- Upcoming Events -->
+            <div class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        Sự kiện sắp tới
+                    </h2>
+                    <a href="#" class="btn btn-outline-primary" onclick="loadAllEvents('upcoming')">
+                        Xem tất cả
+                    </a>
+                </div>
+                
+                <div class="row" id="upcoming-events">
+                    {% for event in upcoming_events %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="event-card h-100">
+                            <div class="event-category-badge">{{ event.category.value|title }}</div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ event.title }}</h5>
+                                <p class="card-text text-muted small mb-2">{{ event.description[:100] }}...</p>
+                                
+                                <div class="event-meta">
+                                    <div class="mb-2">
+                                        <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                        <small>{{ event.event_date|datetime }}</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                        <small>{{ event.location }}</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <i class="fas fa-users text-primary me-2"></i>
+                                        <small>{{ event.current_attendees }}/{{ event.max_capacity }} người</small>
+                                        <div class="progress mt-1" style="height: 4px;">
+                                            <div class="progress-bar" 
+                                                 style="width: {{ (event.current_attendees / event.max_capacity * 100)|round }}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary btn-sm flex-fill" 
+                                            onclick="showEventDetails('{{ event.event_id }}')">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Chi tiết
+                                    </button>
+                                    {% if session.user_id and not event.is_full() %}
+                                        <button class="btn btn-success btn-sm" 
+                                                onclick="registerEvent('{{ event.event_id }}')">
+                                            <i class="fas fa-plus me-1"></i>
+                                            Đăng ký
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Popular Events -->
+            <div class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title">
+                        <i class="fas fa-fire text-danger me-2"></i>
+                        Sự kiện phổ biến
+                    </h2>
+                    <a href="#" class="btn btn-outline-primary" onclick="loadAllEvents('popular')">
+                        Xem tất cả
+                    </a>
+                </div>
+                
+                <div class="row" id="popular-events">
+                    {% for event in popular_events %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="event-card h-100">
+                            <div class="event-category-badge">{{ event.category.value|title }}</div>
+                            <div class="popularity-badge">
+                                <i class="fas fa-star"></i>
+                                Hot
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ event.title }}</h5>
+                                <p class="card-text text-muted small mb-2">{{ event.description[:100] }}...</p>
+                                
+                                <div class="event-meta">
+                                    <div class="mb-2">
+                                        <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                        <small>{{ event.event_date|datetime }}</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                        <small>{{ event.location }}</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <i class="fas fa-users text-primary me-2"></i>
+                                        <small>{{ event.current_attendees }}/{{ event.max_capacity }} người</small>
+                                        <div class="progress mt-1" style="height: 4px;">
+                                            <div class="progress-bar bg-success" 
+                                                 style="width: {{ (event.current_attendees / event.max_capacity * 100)|round }}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary btn-sm flex-fill" 
+                                            onclick="showEventDetails('{{ event.event_id }}')">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Chi tiết
+                                    </button>
+                                    {% if session.user_id and not event.is_full() %}
+                                        <button class="btn btn-success btn-sm" 
+                                                onclick="registerEvent('{{ event.event_id }}')">
+                                            <i class="fas fa-plus me-1"></i>
+                                            Đăng ký
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-5 bg-light">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h2 class="mb-4">Về hệ thống quản lý sự kiện</h2>
+                    <p class="lead mb-4">
+                        Campus Event Management System là giải pháp toàn diện để quản lý các sự kiện trong trường đại học.
+                    </p>
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-1">Phân quyền rõ ràng</h6>
+                                    <small class="text-muted">Admin, Organizer, Student</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-1">Quản lý dễ dàng</h6>
+                                    <small class="text-muted">Tạo, sửa, xóa sự kiện</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-1">Đăng ký thông minh</h6>
+                                    <small class="text-muted">Kiểm tra sức chứa tự động</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-1">Báo cáo chi tiết</h6>
+                                    <small class="text-muted">Thống kê và xuất file</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="text-center">
+                        <canvas id="statsChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Campus Event Management System</h5>
+                    <p class="mb-0">Hệ thống quản lý sự kiện hiện đại cho trường đại học</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">© 2024 Campus Events. Tất cả quyền được bảo lưu.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Event Details Modal -->
+    <div class="modal fade" id="eventDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chi tiết sự kiện</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="eventDetailsContent">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage">
+                    Thao tác thành công!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="errorMessage">
+                    Có lỗi xảy ra!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+    <script>
+        // Initialize stats chart
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Học thuật', 'Văn hóa', 'Thể thao', 'Workshop', 'Khác'],
+                    datasets: [{
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB', 
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Phân loại sự kiện'
+                        }
+                    }
+                }
+            });
+        });
+
+        // Search events function
+        function searchEvents() {
+            const query = document.getElementById('search-input').value;
+            const category = document.getElementById('category-filter').value;
+            
+            fetch(`/api/events?query=${encodeURIComponent(query)}&category=${category}`)
+                .then(response => response.json())
+                .then(events => {
+                    // Update events display
+                    updateEventsDisplay(events);
+                })
+                .catch(error => {
+                    console.error('Error searching events:', error);
+                    showError('Lỗi tìm kiếm sự kiện');
+                });
+        }
+
+        function updateEventsDisplay(events) {
+            const upcomingContainer = document.getElementById('upcoming-events');
+            const popularContainer = document.getElementById('popular-events');
+            
+            // Clear existing content
+            upcomingContainer.innerHTML = '';
+            popularContainer.innerHTML = '';
+            
+            // Sort events by date for upcoming, by attendees for popular
+            const upcomingEvents = events
+                .filter(event => new Date(event.event_date) > new Date())
+                .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
+                .slice(0, 6);
+                
+            const popularEvents = events
+                .sort((a, b) => b.current_attendees - a.current_attendees)
+                .slice(0, 6);
+            
+            // Render upcoming events
+            upcomingEvents.forEach(event => {
+                upcomingContainer.innerHTML += createEventCard(event);
+            });
+            
+            // Render popular events
+            popularEvents.forEach(event => {
+                popularContainer.innerHTML += createEventCard(event, true);
+            });
+        }
+
+        function createEventCard(event, isPopular = false) {
+            const progressPercent = Math.round((event.current_attendees / event.max_capacity) * 100);
+            const popularityBadge = isPopular ? '<div class="popularity-badge"><i class="fas fa-star"></i> Hot</div>' : '';
+            
+            return `
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="event-card h-100">
+                        <div class="event-category-badge">${event.category}</div>
+                        ${popularityBadge}
+                        <div class="card-body">
+                            <h5 class="card-title">${event.title}</h5>
+                            <p class="card-text text-muted small mb-2">${event.description.substring(0, 100)}...</p>
+                            
+                            <div class="event-meta">
+                                <div class="mb-2">
+                                    <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                    <small>${new Date(event.event_date).toLocaleString('vi-VN')}</small>
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                    <small>${event.location}</small>
+                                </div>
+                                <div class="mb-3">
+                                    <i class="fas fa-users text-primary me-2"></i>
+                                    <small>${event.current_attendees}/${event.max_capacity} người</small>
+                                    <div class="progress mt-1" style="height: 4px;">
+                                        <div class="progress-bar" style="width: ${progressPercent}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm flex-fill" onclick="showEventDetails('${event.event_id}')">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Chi tiết
+                                </button>
+                                ${event.current_attendees < event.max_capacity && '{{ session.user_id }}' ? 
+                                    `<button class="btn btn-success btn-sm" onclick="registerEvent('${event.event_id}')">
+                                        <i class="fas fa-plus me-1"></i>
+                                        Đăng ký
+                                    </button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showEventDetails(eventId) {
+            fetch(`/api/events`)
+                .then(response => response.json())
+                .then(events => {
+                    const event = events.find(e => e.event_id === eventId);
+                    if (event) {
+                        const modalContent = document.getElementById('eventDetailsContent');
+                        modalContent.innerHTML = `
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h4>${event.title}</h4>
+                                    <p class="text-muted mb-3">${event.description}</p>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-sm-6">
+                                            <strong><i class="fas fa-calendar-alt text-primary me-2"></i>Thời gian:</strong><br>
+                                            ${new Date(event.event_date).toLocaleString('vi-VN')}
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong><i class="fas fa-map-marker-alt text-primary me-2"></i>Địa điểm:</strong><br>
+                                            ${event.location}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-sm-6">
+                                            <strong><i class="fas fa-tag text-primary me-2"></i>Danh mục:</strong><br>
+                                            ${event.category}
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong><i class="fas fa-user text-primary me-2"></i>Tổ chức:</strong><br>
+                                            ${event.organizer_name}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h5>Tình trạng đăng ký</h5>
+                                            <div class="mb-3">
+                                                <div class="display-6 text-primary">${event.current_attendees}</div>
+                                                <small class="text-muted">/ ${event.max_capacity} người</small>
+                                            </div>
+                                            <div class="progress mb-3">
+                                                <div class="progress-bar" style="width: ${Math.round((event.current_attendees / event.max_capacity) * 100)}%"></div>
+                                            </div>
+                                            ${event.current_attendees < event.max_capacity && '{{ session.user_id }}' ? 
+                                                `<button class="btn btn-success w-100" onclick="registerEvent('${event.event_id}'); bootstrap.Modal.getInstance(document.getElementById('eventDetailsModal')).hide();">
+                                                    <i class="fas fa-plus me-2"></i>Đăng ký tham gia
+                                                </button>` : 
+                                                '<button class="btn btn-secondary w-100" disabled>Đã đầy</button>'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('eventDetailsModal'));
+                        modal.show();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading event details:', error);
+                    showError('Lỗi tải thông tin sự kiện');
+                });
+        }
+
+        function registerEvent(eventId) {
+            if (!confirm('Bạn có chắc muốn đăng ký tham gia sự kiện này?')) {
+                return;
+            }
+
+            fetch(`/api/events/${eventId}/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showSuccess(result.message);
+                    // Reload page to update event display
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showError(result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error registering for event:', error);
+                showError('Lỗi đăng ký sự kiện');
+            });
+        }
+
+        function showSuccess(message) {
+            document.getElementById('toastMessage').textContent = message;
+            const toast = new bootstrap.Toast(document.getElementById('successToast'));
+            toast.show();
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            const toast = new bootstrap.Toast(document.getElementById('errorToast'));
+            toast.show();
+        }
+
+        // Allow search on Enter key
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchEvents();
+            }
+        });
+    </script>
+</body>
+</html>

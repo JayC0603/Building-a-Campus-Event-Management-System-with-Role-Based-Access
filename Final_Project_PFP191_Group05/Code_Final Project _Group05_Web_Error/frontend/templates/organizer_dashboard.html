@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizer Dashboard - Campus Events</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dashboard-page">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Campus Events
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>
+                            Trang chủ
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-edit me-1"></i>
+                            {{ user.full_name or user.username }} (Organizer)
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="createEvent()">
+                                <i class="fas fa-plus me-2"></i>Tạo sự kiện mới</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>QUẢN LÝ SỰ KIỆN</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#overview" data-tab="overview">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Tổng quan
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#my-events" data-tab="my-events">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Sự kiện của tôi
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#registrations" data-tab="registrations">
+                                <i class="fas fa-users me-2"></i>
+                                Quản lý đăng ký
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#analytics" data-tab="analytics">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                Phân tích
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <!-- Overview Tab -->
+                <div id="overview-tab" class="tab-content active">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-chart-line text-primary me-2"></i>
+                            Dashboard Organizer
+                        </h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-primary me-2" onclick="createEvent()">
+                                <i class="fas fa-plus me-2"></i>Tạo sự kiện mới
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="refreshDashboard()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Sự kiện của tôi
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="my-events-count">
+                                                {{ stats.my_events or 0 }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Tổng người tham gia
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="my-attendees-count">
+                                                {{ stats.my_total_attendees or 0 }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Sự kiện hoạt động
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="active-events-count">
+                                                {% set active_count = 0 %}
+                                                {% if stats.my_events_list %}
+                                                    {% for event in stats.my_events_list %}
+                                                        {% if event.status.value == 'active' %}
+                                                            {% set active_count = active_count + 1 %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                                {{ active_count }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Tỷ lệ lấp đầy TB
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="average-fill-rate">
+                                                {% if stats.my_events_list %}
+                                                    {% set total_capacity = 0 %}
+                                                    {% set total_attendees = 0 %}
+                                                    {% for event in stats.my_events_list %}
+                                                        {% set total_capacity = total_capacity + event.max_capacity %}
+                                                        {% set total_attendees = total_attendees + event.current_attendees %}
+                                                    {% endfor %}
+                                                    {% if total_capacity > 0 %}
+                                                        {{ ((total_attendees / total_capacity) * 100)|round }}%
+                                                    {% else %}
+                                                        0%
+                                                    {% endif %}
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="row mb-4">
+                        <div class="col-xl-6">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Tình trạng sự kiện</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-pie">
+                                        <canvas id="eventStatusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-6">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Sự kiện theo danh mục</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-pie">
+                                        <canvas id="categoryChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Events -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Sự kiện gần đây</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên sự kiện</th>
+                                            <th>Ngày</th>
+                                            <th>Địa điểm</th>
+                                            <th>Đăng ký</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if stats.my_events_list %}
+                                            {% for event in stats.my_events_list[:5] %}
+                                            <tr>
+                                                <td>{{ event.title }}</td>
+                                                <td>{{ event.event_date|datetime }}</td>
+                                                <td>{{ event.location }}</td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar" style="width: {{ (event.current_attendees / event.max_capacity * 100)|round }}%">
+                                                            {{ event.current_attendees }}/{{ event.max_capacity }}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {% if event.status.value == 'active' %}
+                                                        <span class="badge bg-success">Hoạt động</span>
+                                                    {% elif event.status.value == 'draft' %}
+                                                        <span class="badge bg-secondary">Nháp</span>
+                                                    {% elif event.status.value == 'cancelled' %}
+                                                        <span class="badge bg-danger">Đã hủy</span>
+                                                    {% else %}
+                                                        <span class="badge bg-info">{{ event.status.value|title }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary" onclick="editEvent('{{ event.event_id }}')">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-info" onclick="viewRegistrations('{{ event.event_id }}')">
+                                                        <i class="fas fa-users"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">Chưa có sự kiện nào</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Events Tab -->
+                <div id="my-events-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-calendar-alt text-primary me-2"></i>
+                            Sự kiện của tôi
+                        </h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-primary" onclick="createEvent()">
+                                <i class="fas fa-plus me-2"></i>Tạo sự kiện mới
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Row -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="Tìm kiếm sự kiện..." id="my-events-search">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="my-events-status-filter">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="active">Hoạt động</option>
+                                <option value="draft">Nháp</option>
+                                <option value="cancelled">Đã hủy</option>
+                                <option value="completed">Hoàn thành</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="my-events-category-filter">
+                                <option value="">Tất cả danh mục</option>
+                                <option value="academic">Học thuật</option>
+                                <option value="cultural">Văn hóa</option>
+                                <option value="sports">Thể thao</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="seminar">Hội thảo</option>
+                                <option value="competition">Thi đấu</option>
+                                <option value="other">Khác</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-primary w-100" onclick="filterMyEvents()">
+                                <i class="fas fa-search"></i> Lọc
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Events Grid -->
+                    <div class="row" id="my-events-grid">
+                        {% if stats.my_events_list %}
+                            {% for event in stats.my_events_list %}
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="card event-card h-100">
+                                    <div class="event-category-badge">{{ event.category.value|title }}</div>
+                                    {% if event.status.value != 'active' %}
+                                        <div class="status-badge bg-{{ 'secondary' if event.status.value == 'draft' else 'danger' }}">
+                                            {{ 'Nháp' if event.status.value == 'draft' else 'Đã hủy' if event.status.value == 'cancelled' else event.status.value|title }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ event.title }}</h5>
+                                        <p class="card-text text-muted small">{{ event.description[:100] }}...</p>
+                                        
+                                        <div class="event-meta mb-3">
+                                            <div class="mb-2">
+                                                <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                                <small>{{ event.event_date|datetime }}</small>
+                                            </div>
+                                            <div class="mb-2">
+                                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                                <small>{{ event.location }}</small>
+                                            </div>
+                                            <div class="mb-2">
+                                                <i class="fas fa-users text-primary me-2"></i>
+                                                <small>{{ event.current_attendees }}/{{ event.max_capacity }} người</small>
+                                                <div class="progress mt-1" style="height: 4px;">
+                                                    <div class="progress-bar" style="width: {{ (event.current_attendees / event.max_capacity * 100)|round }}%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary btn-sm flex-fill" onclick="editEvent('{{ event.event_id }}')">
+                                                <i class="fas fa-edit me-1"></i>Sửa
+                                            </button>
+                                            <button class="btn btn-info btn-sm" onclick="viewRegistrations('{{ event.event_id }}')">
+                                                <i class="fas fa-users"></i>
+                                            </button>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" onclick="duplicateEvent('{{ event.event_id }}')">
+                                                        <i class="fas fa-copy me-2"></i>Nhân bản</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" onclick="deleteEvent('{{ event.event_id }}')">
+                                                        <i class="fas fa-trash me-2"></i>Xóa</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                                    <h4 class="text-muted">Chưa có sự kiện nào</h4>
+                                    <p class="text-muted">Hãy tạo sự kiện đầu tiên của bạn!</p>
+                                    <button class="btn btn-primary" onclick="createEvent()">
+                                        <i class="fas fa-plus me-2"></i>Tạo sự kiện mới
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Registrations Tab -->
+                <div id="registrations-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Quản lý đăng ký
+                        </h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <select class="form-select me-2" id="registration-event-filter">
+                                <option value="">Tất cả sự kiện</option>
+                                {% if stats.my_events_list %}
+                                    {% for event in stats.my_events_list %}
+                                    <option value="{{ event.event_id }}">{{ event.title }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                            <button class="btn btn-outline-secondary" onclick="refreshRegistrations()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="registrations-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Sự kiện</th>
+                                            <th>Người đăng ký</th>
+                                            <th>Email</th>
+                                            <th>Ngày đăng ký</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="registrations-tbody">
+                                        <!-- Content will be loaded via AJAX -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analytics-tab" class="tab-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-chart-pie text-primary me-2"></i>
+                            Phân tích chi tiết
+                        </h1>
+                    </div>
+
+                    <!-- Analytics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-white bg-primary">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <p class="card-text">Sự kiện phổ biến nhất</p>
+                                            <h4 class="card-title" id="most-popular-event">-</h4>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-star fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <p class="card-text">Tỷ lệ đăng ký TB</p>
+                                            <h4 class="card-title" id="avg-registration-rate">-</h4>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-chart-line fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card text-white bg-warning">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <p class="card-text">Sự kiện sắp tới</p>
+                                            <h4 class="card-title" id="upcoming-events">-</h4>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-clock fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card text-white bg-info">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <p class="card-text">Đánh giá TB</p>
+                                            <h4 class="card-title">4.8⭐</h4>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-thumbs-up fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Analytics Charts -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold text-primary">Xu hướng đăng ký theo thời gian</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="registrationTrendChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal fade" id="eventModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalTitle">Tạo sự kiện mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="eventForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="eventId" name="eventId">
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="eventTitle" class="form-label">Tên sự kiện *</label>
+                                <input type="text" class="form-control" id="eventTitle" name="title" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="eventCategory" class="form-label">Danh mục *</label>
+                                <select class="form-select" id="eventCategory" name="category" required>
+                                    <option value="academic">Học thuật</option>
+                                    <option value="cultural">Văn hóa</option>
+                                    <option value="sports">Thể thao</option>
+                                    <option value="workshop">Workshop</option>
+                                    <option value="seminar">Hội thảo</option>
+                                    <option value="competition">Thi đấu</option>
+                                    <option value="other">Khác</option>
+                                </select>

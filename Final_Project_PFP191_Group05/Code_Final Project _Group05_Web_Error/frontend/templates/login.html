@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Campus Events</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+    <div class="container-fluid vh-100">
+        <div class="row h-100">
+            <!-- Left Side - Login Form -->
+            <div class="col-lg-5 d-flex align-items-center justify-content-center">
+                <div class="login-form-container">
+                    <div class="text-center mb-4">
+                        <h1 class="h3 fw-bold text-primary">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            Campus Events
+                        </h1>
+                        <p class="text-muted">Đăng nhập để quản lý sự kiện</p>
+                    </div>
+
+                    <div class="card shadow">
+                        <div class="card-body p-4">
+                            <h4 class="card-title text-center mb-4">Đăng nhập</h4>
+                            
+                            <!-- Login Form -->
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Tên đăng nhập</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                        <input type="text" class="form-control" id="username" name="username" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="password" class="form-label">Mật khẩu</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control" id="password" name="password" required>
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="rememberMe">
+                                        <label class="form-check-label" for="rememberMe">
+                                            Ghi nhớ đăng nhập
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 mb-3" id="loginBtn">
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    Đăng nhập
+                                </button>
+                            </form>
+
+                            <hr>
+
+                            <div class="text-center">
+                                <p class="mb-0">Chưa có tài khoản? 
+                                    <a href="#" class="text-primary" data-bs-toggle="modal" data-bs-target="#registerModal">
+                                        Đăng ký ngay
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Demo Accounts Info -->
+                    <div class="mt-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Tài khoản demo
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Admin:</strong><br>
+                                        <small>admin / admin123</small><br>
+                                        
+                                        <strong>Organizer:</strong><br>
+                                        <small>organizer1 / org123</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Student:</strong><br>
+                                        <small>student1 / student123</small><br>
+                                        
+                                        <strong>Visitor:</strong><br>
+                                        <small>visitor1 / visitor123</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="/" class="text-muted">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Về trang chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Feature Showcase -->
+            <div class="col-lg-7 bg-gradient d-none d-lg-flex align-items-center justify-content-center text-white">
+                <div class="text-center">
+                    <div class="mb-5">
+                        <i class="fas fa-calendar-check display-1 mb-4"></i>
+                        <h2 class="mb-4">Quản lý Sự kiện Thông minh</h2>
+                        <p class="lead mb-4">
+                            Hệ thống quản lý sự kiện campus hiện đại với đầy đủ tính năng
+                        </p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="feature-highlight">
+                                <i class="fas fa-users fa-2x mb-3"></i>
+                                <h5>Phân quyền</h5>
+                                <p>Admin, Organizer, Student</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="feature-highlight">
+                                <i class="fas fa-chart-bar fa-2x mb-3"></i>
+                                <h5>Báo cáo</h5>
+                                <p>Thống kê chi tiết</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="feature-highlight">
+                                <i class="fas fa-mobile-alt fa-2x mb-3"></i>
+                                <h5>Responsive</h5>
+                                <p>Mọi thiết bị</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Đăng ký tài khoản</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="regUsername" class="form-label">Tên đăng nhập *</label>
+                                <input type="text" class="form-control" id="regUsername" name="username" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="regEmail" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="regEmail" name="email" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="regFullName" class="form-label">Họ và tên *</label>
+                            <input type="text" class="form-control" id="regFullName" name="full_name" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="regPassword" class="form-label">Mật khẩu *</label>
+                                <input type="password" class="form-control" id="regPassword" name="password" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="regRole" class="form-label">Vai trò *</label>
+                                <select class="form-select" id="regRole" name="role" required>
+                                    <option value="student">Sinh viên</option>
+                                    <option value="visitor">Khách</option>
+                                    <option value="organizer">Tổ chức sự kiện</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Đăng ký
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="alertToast" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-bell me-2"></i>
+                <strong class="me-auto">Thông báo</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                <!-- Message will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordField = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const loginData = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang đăng nhập...';
+            loginBtn.disabled = true;
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(loginData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showToast('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    showToast(result.message, 'error');
+                    loginBtn.innerHTML = originalText;
+                    loginBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                showToast('Lỗi đăng nhập. Vui lòng thử lại.', 'error');
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            });
+        });
+
+        // Register form handler
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const registerData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                full_name: formData.get('full_name'),
+                role: formData.get('role')
+            };
+
+            fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(registerData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showToast('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+                    this.reset();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Register error:', error);
+                showToast('Lỗi đăng ký. Vui lòng thử lại.', 'error');
+            });
+        });
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('alertToast');
+            const toastBody = document.getElementById('toastMessage');
+            
+            // Set message
+            toastBody.textContent = message;
+            
+            // Set color based on type
+            toast.className = 'toast';
+            if (type === 'success') {
+                toast.classList.add('bg-success', 'text-white');
+            } else if (type === 'error') {
+                toast.classList.add('bg-danger', 'text-white');
+            } else {
+                toast.classList.add('bg-info', 'text-white');
+            }
+            
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+
+        // Demo account quick login
+        function quickLogin(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+        }
+
+        // Add click handlers for demo accounts
+        document.addEventListener('DOMContentLoaded', function() {
+            const demoCard = document.querySelector('.card.bg-light');
+            if (demoCard) {
+                demoCard.addEventListener('click', function(e) {
+                    const target = e.target;
+                    if (target.tagName === 'SMALL') {
+                        const credentials = target.textContent.split(' / ');
+                        if (credentials.length === 2) {
+                            quickLogin(credentials[0], credentials[1]);
+                        }
+                    }
+                });
+                
+                // Add cursor pointer to demo accounts
+                const demoSmalls = demoCard.querySelectorAll('small');
+                demoSmalls.forEach(small => {
+                    small.style.cursor = 'pointer';
+                    small.title = 'Click để điền sẵn thông tin đăng nhập';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
